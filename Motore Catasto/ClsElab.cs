@@ -2444,7 +2444,7 @@ namespace Motore_Catasto
                 x++;
                 myItem.Nome = ListColFile[x];
                 x++;
-                myItem.CodFiscalePIVA = ListColFile[x];
+                myItem.CodFiscalePIVA = ListColFile[x].Replace("'","");
                 x++;
                 myItem.IDImmobileCat = ListColFile[x];
                 x++;
@@ -2695,6 +2695,24 @@ namespace Motore_Catasto
                             if (ListDic.Count > 0)
                             {
                                 new Utility.DichManagerCatasto(RouteConfig.TypeDB, RouteConfig.StringConnectionICI).SetElaborazioneCat(myElab.ID, IDElabCat);
+                                //Storicizzo tutte le dichiarazioni che saranno toccate
+                                if (!new ClsManageDB().StoricizzaDIC(ListDic, DBModel.Ambiente_Verticale))
+                                {
+                                    if (File.Exists(RouteConfig.PathRibaltaScartati + myNameFile))
+                                    {
+                                        File.Delete(RouteConfig.PathRibaltaScartati + myNameFile);
+                                    }
+                                    File.Move(RouteConfig.PathRibaltaInLavorazione + myNameFile, RouteConfig.PathRibaltaScartati + myNameFile);
+                                    mySingleFile.EsitoImport = Elaborazione.Esito.KO;
+                                    myElab.ListFiles.Add(mySingleFile);
+                                    myElab.FineImport = DateTime.Now;
+                                    myElab.EsitoImport = "Errore in ImportFlussi.Errore Storicizzazione dichirazioni";
+                                    new Utility.DichManagerCatasto(RouteConfig.TypeDB, RouteConfig.StringConnectionICI).SetElaborazione(myElab);
+                                    return false;
+                                }
+                                else
+                                {
+                                //Inserisco i movimenti da catasto
                                 if (!new ClsManageDB().SaveDIC(ListDic, DBModel.Ambiente_Verticale))
                                 {
                                     if (File.Exists(RouteConfig.PathRibaltaScartati + myNameFile))
@@ -2718,6 +2736,7 @@ namespace Motore_Catasto
                                     File.Move(RouteConfig.PathRibaltaInLavorazione + myNameFile, RouteConfig.PathRibaltaAcquisiti + myNameFile);
                                     mySingleFile.EsitoImport = Elaborazione.Esito.OK;
                                     myElab.ListFiles.Add(mySingleFile);
+                                }
                                 }
                             }
                             else

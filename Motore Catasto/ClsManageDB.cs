@@ -1299,6 +1299,37 @@ namespace Motore_Catasto
                 return false;
             }
         }
+        public bool StoricizzaDIC(List<Dichiarazione> ListItem, string Ambiente)
+        {
+            int x = 0;
+            try
+            {
+                using (DBModel ctx = new DBModel(Ambiente))
+                {
+                    foreach (Dichiarazione myItem in ListItem)
+                    {
+                        int nRet = 0;
+                        if (myItem.IDImmobile != string.Empty)
+                        {
+                            string sSQL = ctx.GetSQL("prc_TBLOGGETTI_D", "ID");
+                            nRet = ctx.ContextDB.Database.SqlQuery<int>(sSQL, ctx.GetParam("ID", myItem.IDImmobile)).First<int>();
+                            if (nRet <= 0)
+                            {
+                                Log.Debug("Motore_Catasto.ClsManageDB.StoricizzaDIC::errore in storicizzazione");
+                                Log.Debug("Motore_Catasto.ClsManageDB.StoricizzaDIC.exec prc_TBLOGGETTI_D @ID=" + myItem.ID.ToString());
+                            }
+                        }
+                    }
+                    ctx.Dispose();
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("Motore_Catasto.ClsManageDB.StoricizzaDIC.errore::" + x.ToString(), ex);
+                return false;
+            }
+        }
         public bool SaveDIC(List<Dichiarazione> ListItem, string Ambiente)
         {
             int x = 0;
